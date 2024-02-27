@@ -108,7 +108,7 @@ function TodoApp() {
 
 	return (
 		<div className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 min-h-screen flex justify-center items-center">
-			<div className="bg-white w-full max-w-3xl rounded shadow-lg p-8">
+			<div className="bg-gray-100 w-full max-w-3xl rounded shadow-lg p-8">
 				<h1 className="text-3xl font-semibold text-center mb-6">To-Do List</h1>
 				<div className="flex items-center border-b border-gray-300 py-2 mb-4">
 					<input type="text" value={inputValue} onChange={handleInputChange} onKeyPress={handleKeyPress} className="flex-1 px-3 py-2 mr-2 rounded border border-gray-300 focus:outline-none" placeholder="Enter your task" />
@@ -116,8 +116,8 @@ function TodoApp() {
 						Add
 					</button>
 				</div>
-				<div className="flex justify-between items-center mb-4">
-					<div className="flex space-x-4">
+				<div className="flex justify-between items-center mb-4 flex-wrap">
+					<div className="flex space-x-4 mb-2 md:mb-0">
 						<button onClick={() => handleFilter("all")} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none">
 							All
 						</button>
@@ -136,6 +136,7 @@ function TodoApp() {
 						</select>
 					</div>
 				</div>
+
 				<div className="overflow-y-auto max-h-60vh">
 					<ul>
 						{filteredTodos.map((todo) => (
