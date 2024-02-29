@@ -4,7 +4,6 @@ import TodoFilter from "./components/TodoFilter";
 import TodoSort from "./components/TodoSort";
 
 function TodoApp() {
-	// State dan fungsi lainnya
 	const [inputValue, setInputValue] = useState("");
 	const [filterStatus, setFilterStatus] = useState("all");
 	const [sortBy, setSortBy] = useState("");
