@@ -14,6 +14,8 @@ function TodoApp() {
 	const [todos, setTodos] = useState(getInitialActivities());
 	const [editId, setEditId] = useState(null);
 	const [editInputValue, setEditInputValue] = useState("");
+	const [selectedDate, setSelectedDate] = useState("");
+	const [todayDate, setTodayDate] = useState(new Date().toISOString().substr(0, 10));
 
 	useEffect(() => {
 		const storedTodos = JSON.parse(localStorage.getItem("todos"));
@@ -33,9 +35,11 @@ function TodoApp() {
 				text: inputValue,
 				completed: false,
 				createdAt: new Date().toISOString(),
+				deadline: selectedDate, // Tambah properti deadline
 			};
 			setTodos([...todos, newTodo]);
 			setInputValue("");
+			setSelectedDate(""); // Reset input tanggal setelah tugas ditambahkan
 		}
 	};
 
@@ -68,6 +72,17 @@ function TodoApp() {
 		}
 	};
 
+	const calculatePriority = (deadline) => {
+		if (!deadline) {
+		  return Infinity; // Assign Infinity for tasks without a deadline
+		}
+		const today = new Date();
+		const dueDate = new Date(deadline);
+		const differenceInTime = dueDate.getTime() - today.getTime();
+		const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24)); // Convert milliseconds to days
+		return differenceInDays;
+	  };
+
 	const handleFilter = (status) => {
 		setFilterStatus(status);
 	};
@@ -76,12 +91,14 @@ function TodoApp() {
 		setSortBy(criteria);
 		const sortedTodos = [...todos];
 		if (criteria === "createdAt") {
-			sortedTodos.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+		  sortedTodos.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 		} else if (criteria === "text") {
-			sortedTodos.sort((a, b) => a.text.localeCompare(b.text));
+		  sortedTodos.sort((a, b) => a.text.localeCompare(b.text));
+		} else if (criteria === "priority") {
+		  sortedTodos.sort((a, b) => calculatePriority(a.deadline) - calculatePriority(b.deadline));
 		}
 		setTodos(sortedTodos);
-	};
+	  };
 
 	const handleEdit = (id) => {
 		setEditId(id);
@@ -112,6 +129,7 @@ function TodoApp() {
 				<h1 className="text-3xl font-semibold text-center mb-6">To-Do List</h1>
 				<div className="flex items-center border-b border-gray-300 py-2 mb-4">
 					<input type="text" value={inputValue} onChange={handleInputChange} onKeyPress={handleKeyPress} className="flex-1 px-3 py-2 mr-2 rounded border border-gray-300 focus:outline-none" placeholder="Enter your task" />
+					<input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="flex-1 px-3 py-2 mr-2 rounded border border-gray-300 focus:outline-none" />
 					<button onClick={addTodo} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none">
 						Add
 					</button>
@@ -131,8 +149,9 @@ function TodoApp() {
 					<div>
 						<select onChange={(e) => handleSortBy(e.target.value)} className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 focus:outline-none">
 							<option value="">Sort by</option>
-							<option value="createdAt">Date</option>
+							<option value="createdAt">Created</option>
 							<option value="text">Text</option>
+							<option value="priority">Priority</option>
 						</select>
 					</div>
 				</div>
@@ -163,6 +182,7 @@ function TodoApp() {
 											<div className={todo.completed ? "line-through" : ""}>{todo.text}</div> {/* Teks todo */}
 											<div className="text-xs text-gray-400">
 												{new Date(todo.createdAt).toLocaleTimeString()}, {new Date(todo.createdAt).toLocaleDateString()}
+												&nbsp;- Deadline: {todo.deadline ? new Date(todo.deadline).toLocaleDateString() : "-"}
 											</div>
 										</span>
 									)}
