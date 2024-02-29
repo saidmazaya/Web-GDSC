@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaCheck, FaEdit, FaTrash } from "react-icons/fa";
 
 function TodoApp() {
 	function getInitialActivities() {
@@ -15,7 +15,7 @@ function TodoApp() {
 	const [editId, setEditId] = useState(null);
 	const [editInputValue, setEditInputValue] = useState("");
 	const [selectedDate, setSelectedDate] = useState("");
-	const [todayDate, setTodayDate] = useState(new Date().toISOString().substr(0, 10));
+	const [editDeadline, setEditDeadline] = useState("");
 
 	useEffect(() => {
 		const storedTodos = JSON.parse(localStorage.getItem("todos"));
@@ -74,14 +74,14 @@ function TodoApp() {
 
 	const calculatePriority = (deadline) => {
 		if (!deadline) {
-		  return Infinity; // Assign Infinity for tasks without a deadline
+			return Infinity; // Assign Infinity for tasks without a deadline
 		}
 		const today = new Date();
 		const dueDate = new Date(deadline);
 		const differenceInTime = dueDate.getTime() - today.getTime();
 		const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24)); // Convert milliseconds to days
 		return differenceInDays;
-	  };
+	};
 
 	const handleFilter = (status) => {
 		setFilterStatus(status);
@@ -91,25 +91,36 @@ function TodoApp() {
 		setSortBy(criteria);
 		const sortedTodos = [...todos];
 		if (criteria === "createdAt") {
-		  sortedTodos.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+			sortedTodos.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 		} else if (criteria === "text") {
-		  sortedTodos.sort((a, b) => a.text.localeCompare(b.text));
+			sortedTodos.sort((a, b) => a.text.localeCompare(b.text));
 		} else if (criteria === "priority") {
-		  sortedTodos.sort((a, b) => calculatePriority(a.deadline) - calculatePriority(b.deadline));
+			sortedTodos.sort((a, b) => calculatePriority(a.deadline) - calculatePriority(b.deadline));
 		}
 		setTodos(sortedTodos);
-	  };
+	};
 
 	const handleEdit = (id) => {
 		setEditId(id);
 		const todoToEdit = todos.find((todo) => todo.id === id);
 		setEditInputValue(todoToEdit.text);
+		setEditDeadline(todoToEdit.deadline); // Inisialisasi nilai editDeadline
 	};
 
 	const handleSaveEdit = (id, newText) => {
-		const updatedTodos = todos.map((todo) => (todo.id === id ? { ...todo, text: newText } : todo));
+		const updatedTodos = todos.map((todo) => {
+			if (todo.id === id) {
+				return { ...todo, text: newText, deadline: editDeadline };
+			}
+			return todo;
+		});
 		setTodos(updatedTodos);
-		setInputValue("");
+		setEditId(null);
+		setEditInputValue("");
+	};
+
+	const handleSaveEditDeadline = (id) => {
+		handleSaveEdit(id, editInputValue); // Panggil fungsi handleSaveEdit yang sudah ada
 	};
 
 	const filteredTodos =
@@ -168,27 +179,33 @@ function TodoApp() {
 											</svg>
 										)}
 									</div>
-									{/* Render input teks saat mode edit aktif */}
 									{editId === todo.id ? (
-										<input
-											type="text"
-											value={editInputValue}
-											onChange={(event) => setEditInputValue(event.target.value)}
-											onKeyPress={(event) => handleKeyPress(event)}
-											className="flex-1 px-3 ml-3 py-2 mr-2 rounded border border-gray-300 focus:outline-none"
-										/>
+										<>
+											<input
+												type="text"
+												value={editInputValue}
+												onChange={(event) => setEditInputValue(event.target.value)}
+												onKeyPress={(event) => handleKeyPress(event)}
+												className="flex-1 px-3 ml-3 py-2 mr-2 rounded border border-gray-300 focus:outline-none"
+											/>
+											<input type="date" value={editDeadline} onChange={(event) => setEditDeadline(event.target.value)} className="flex-1 px-3 ml-3 py-2 mr-2 rounded border border-gray-300 focus:outline-none" />
+										</>
 									) : (
 										<span className={`ml-3 flex-1 ${todo.completed ? "text-gray-500" : ""}`}>
 											<div className={todo.completed ? "line-through" : ""}>{todo.text}</div> {/* Teks todo */}
 											<div className="text-xs text-gray-400">
-												{new Date(todo.createdAt).toLocaleTimeString()}, {new Date(todo.createdAt).toLocaleDateString()}
-												&nbsp;- Deadline: {todo.deadline ? new Date(todo.deadline).toLocaleDateString() : "-"}
+												{new Date(todo.createdAt).toLocaleTimeString()}, {new Date(todo.createdAt).toLocaleDateString("en-GB")}
+												&nbsp;- Deadline: {todo.deadline ? new Date(todo.deadline).toLocaleDateString("en-GB") : "-"}
 											</div>
 										</span>
 									)}
 								</div>
 								<div>
-									{/* Periksa apakah mode edit aktif sebelum merender tombol edit */}
+									{editId === todo.id && (
+										<button onClick={() => handleSaveEditDeadline(todo.id)} className="mr-2 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none">
+											<FaCheck />
+										</button>
+									)}
 									{editId !== todo.id && (
 										<button onClick={() => handleEdit(todo.id)} className="mr-2 px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none">
 											<FaEdit />
